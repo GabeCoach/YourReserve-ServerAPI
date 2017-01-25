@@ -1,4 +1,10 @@
-﻿using System;
+﻿/* Description: This controller handles all login functanality for the server
+ * Methods: LoginCustomer, LoginRestaurant
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,137 +34,43 @@ namespace YourReserve.Controllers
     [Authorize]
     public class LoginController : ApiController
     {
-        //string sBaseURL = System.Configuration.ConfigurationSettings.AppSettings["BaseURL"];
         string sBaseURL = "http://localhost/YourReserve";
         string sClaimLifeTime = System.Configuration.ConfigurationManager.AppSettings["ClaimLife"];
 
         private DB_9D2D33_YourReserveDBEntities db = new DB_9D2D33_YourReserveDBEntities();
         private EncryptDecrypt oCrypt = new EncryptDecrypt();
 
-        [HttpPost]
-        [AllowAnonymous]
-        [Route("api/LoginController/TempLoginCustomer")]
-        public HttpResponseMessage TempLoginCustomer()
-        {
-            Task<string> loginData = Request.Content.ReadAsStringAsync();
-            string sData = loginData.Result;
-
-            UserModel oLoginData = JsonConvert.DeserializeObject<UserModel>(sData);
-
-            try
-            {
-                var users = from u in db.Users
-                            where u.UserName == oLoginData.UserName && u.Password == oLoginData.Password
-                            select u;
-
-                var user = users.FirstOrDefault();
-
-                if (users.Any())
-                {
-                    return new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new ObjectContent<object>(new
-                        {
-                            Message = "Valid login.",
-                            UserName = oLoginData.UserName,
-                            UserID = user.UserID
-                        }, Configuration.Formatters.JsonFormatter)
-                    };
-
-                }
-                else
-                {
-                    throw new Exception();
-                }
-            }
-            catch(Exception ex)
-            {
-                return new HttpResponseMessage(HttpStatusCode.NotAcceptable)
-                {
-                    Content = new ObjectContent<object>(new
-                    {
-                        Message = "Invalid login."
-                    }, Configuration.Formatters.JsonFormatter)
-                };
-            }
-        }
-
-        [HttpPost]
-        [AllowAnonymous]
-        [Route("api/LoginController/TempLoginRestaurant")]
-        public HttpResponseMessage TempLoginRestaurant()
-        {
-            Task<string> loginData = Request.Content.ReadAsStringAsync();
-            string sData = loginData.Result;
-
-            UserModel oLoginData = JsonConvert.DeserializeObject<UserModel>(sData);
-
-            try
-            {
-                var users = from u in db.RestaurantOwners
-                            where u.UserName == oLoginData.UserName && u.Password == oLoginData.Password
-                            select u;
-
-                var RestID = users.FirstOrDefault();
-
-                if (users.Any())
-                {
-                    return new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new ObjectContent<object>(new
-                        {
-                            Message = "Valid login.",
-                            UserName = oLoginData.UserName,
-                            ID = RestID.RestaurantID
-                        }, Configuration.Formatters.JsonFormatter)
-                    };
-
-                }
-                else
-                {
-                    throw new Exception();
-                }
-            }
-            catch (Exception ex)
-            {
-                return new HttpResponseMessage(HttpStatusCode.BadRequest)
-                {
-                    Content = new ObjectContent<object>(new
-                    {
-                        Message = "Invalid login."
-                    }, Configuration.Formatters.JsonFormatter)
-                };
-            }
-        }
-
+        /* Description: Perform Login request for the YourReserve Customer website.
+         * Return Value: The JWT Token string is returned from this function.
+        */
         [HttpPost]
         [AllowAnonymous]
         [Route("api/LoginController/LoginCustomer")]
         public HttpResponseMessage LoginCustomer()
         {
-
+            //Get Request IPAddress
             string sIPAddress = Request.GetOwinContext().Request.RemoteIpAddress;
-            //LogData("** Logon process initiated. IPAddress : " + sIPAddress);
 
+            //Retrieve the Request body content and deserialise to the UserModel Object
             Task<string> logindata = Request.Content.ReadAsStringAsync();
             string sData = logindata.Result;
-
             UserModel oLoginData = JsonConvert.DeserializeObject<UserModel>(sData);
 
+            //Encrypt the user password to match password in database
             var oDecrypt = new EncryptDecrypt();
-
             oDecrypt.HashValue = "13yH5J87m3Xx8";
             oDecrypt.SaltKey = "Gh7f8JAs308f6";
             oDecrypt.VIKey = "Hj74K45yGn28A51l";
-
             string sEncryptedUserName = oLoginData.UserName;
             string sEncryptedPassword = oDecrypt.Encrypt(oLoginData.Password);
 
+            //Perform Login
             sEncryptedUserName = PerformLogin2(sEncryptedUserName, sEncryptedPassword);
 
             string sUserName = sEncryptedUserName;
             int iUserID = GetUserID(sUserName).First();
 
+            //Return JWT Token if the PerformLogin function returns a Username.
             if (sUserName != "")
             {
                 string sToken = GetJwtFromTokenIssuer(oLoginData.UserName);
@@ -175,6 +87,7 @@ namespace YourReserve.Controllers
                 };
             }
 
+            //Return Invalid Login message.
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ObjectContent<object>(new
@@ -193,6 +106,9 @@ namespace YourReserve.Controllers
                    select u.UserID;
         }
 
+        /* Description: Perform Login for the Restaurant Dashboard Website
+         * Follows same code, as LoginCustomer Method.
+         */
         [HttpPost]
         [AllowAnonymous]
         [Route("api/LoginController/LoginRestaurant")]
@@ -237,7 +153,6 @@ namespace YourReserve.Controllers
                 };
             }
 
-            //LogData("Invalid login : " + sUserName + ". IPAddress : " + sIPAddress);
             return new HttpResponseMessage(HttpStatusCode.Unauthorized)
             {
                 Content = new ObjectContent<object>(new
@@ -258,6 +173,10 @@ namespace YourReserve.Controllers
             return Convert.ToInt32(query);
         }
 
+        /* Description: Determine if username and password match stored database data
+         * Params: Username, Password
+         * Return: Username string.
+        */
         private string PerformLogin2(string UserName, string Password)
         {
             var query =
@@ -310,15 +229,20 @@ namespace YourReserve.Controllers
         }
 
 
-
+        /* Description: Create JWT Token
+         * Params: Username
+         * Return: JWT Token string.
+        */
         private string GetJwtFromTokenIssuer(string sUserName)
         {
+            //Create token lifetime
             int iClaimLifeTime = 400;
             if (sClaimLifeTime != null && sClaimLifeTime != "")
             {
                 iClaimLifeTime = Convert.ToInt32(sClaimLifeTime);
             }
 
+            //Generate key
             KeySingleton keySingleton = KeySingleton.Instance();
             keySingleton.key = GenerateKey();
             string sKey = keySingleton.key;
@@ -329,6 +253,7 @@ namespace YourReserve.Controllers
 
             var signingCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(symmetericKey, SecurityAlgorithms.HmacSha256Signature);
 
+            //Create new Token Descriptor object
             var descriptor = new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor()
             {
                 Issuer = "http://authzserver.demo",
@@ -359,12 +284,17 @@ namespace YourReserve.Controllers
         }
     }
 
+    
     public class EncryptDecrypt
     {
         private static string _HashValue;
         private static string _SaltKey;
         private static string _VIKey;
 
+       /* Description: Encrypt string value
+        * Params: plainText
+        * Return: Encrypted string value.
+        */
         public string Encrypt(string plainText)
         {
             string sReturn = "";
@@ -398,7 +328,10 @@ namespace YourReserve.Controllers
             return sReturn;
         }
 
-
+       /* Description: Decrypt string value
+        * Params: plainText
+        * Return: Encrypted string value.
+        */
         public string Decrypt(string encryptedText)
         {
             string sReturn = "";

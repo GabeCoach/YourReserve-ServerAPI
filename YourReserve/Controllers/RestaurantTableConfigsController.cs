@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Description: This controller handles all CRUD Operations for Restaurants table.
+ * Methods: SearchRestaurant, registerRestaurant
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -83,6 +88,7 @@ namespace YourReserve.Controllers
                 return BadRequest(ModelState);
             }
 
+            //query table configurations
             var query = from t in db.RestaurantTableConfigs
                         where t.RestaurantID == restaurantTableConfig.RestaurantID
                         select new { ConfigID = t.TableConfigID, TableNumber = t.TableNumber };
@@ -91,6 +97,7 @@ namespace YourReserve.Controllers
 
             try
             {
+                //determine if table has been created
                 if (!query.Any())
                 {
                     db.RestaurantTableConfigs.Add(restaurantTableConfig);
@@ -158,8 +165,10 @@ namespace YourReserve.Controllers
             return db.RestaurantTableConfigs.Count(e => e.TableConfigID == id) > 0;
         }
 
+        /* Description: This method queries a table configuration.
+         * Params: int ID
+         */
         [HttpGet]
-
         [Route("api/RestaurantTableConfigs/getTableConfiguration/{ID}")]
         public IOrderedQueryable getTableConfiguration(int ID)
         {

@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Description: This controller handles all CRUD Operations for RestaurantOwners table.
+ * Methods: GetRestaurantOwners, PostRestaurantOwners
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -35,7 +40,9 @@ namespace YourReserve.Controllers
             return Ok(restaurantOwner);
         }
 
-
+        /* Description: This method gets the RestaurantOwners by the UserName.
+         * Params: string UserName,
+         */
         [HttpGet]
         [Route("api/RestaurantOwners/getByUserName/{UserName}")]
         public IOrderedQueryable getByUserName(string UserName)
@@ -46,17 +53,6 @@ namespace YourReserve.Controllers
 
             return (IOrderedQueryable)query;
         }
-
-        //[Authorize]
-        //[HttpGet]
-        //[Route("api/RestaurantOwners/getRole/{ID}")]
-        //public IOrderedQueryable getRole(int ID)
-        //{
-        //    var query = from u in db.RestaurantOwners
-        //                join 
-        //                select 
-
-        //}
 
         // PUT: api/RestaurantOwners/5
         [ResponseType(typeof(void))]
@@ -102,12 +98,11 @@ namespace YourReserve.Controllers
                 return BadRequest(ModelState);
             }
 
+            //Encrypt password to be entered in the database
             var oEncrypt = new EncryptDecrypt();
-
             oEncrypt.HashValue = "13yH5J87m3Xx8";
             oEncrypt.SaltKey = "Gh7f8JAs308f6";
             oEncrypt.VIKey = "Hj74K45yGn28A51l";
-
             string sEncryptedPassword = restaurantOwner.Password;
 
             sEncryptedPassword = oEncrypt.Encrypt(restaurantOwner.Password);
@@ -149,7 +144,9 @@ namespace YourReserve.Controllers
             return db.RestaurantOwners.Count(e => e.RestaurantOwnerID == id) > 0;
         }
 
-
+        /* Description: This method gets the RestaurantID using the RestaurantOwners UserName.
+         * Params: string UserName
+         */
         [HttpGet]
         [Route("api/RestaurantOwners/getRestaurantID/{UserName}")]
         public int getRestaurantID(string UserName)
@@ -162,7 +159,6 @@ namespace YourReserve.Controllers
                             where r.UserName == UserName
                             select r.RestaurantID;
 
-                //returnID = (int)query;
             }
             catch(Exception ex)
             {

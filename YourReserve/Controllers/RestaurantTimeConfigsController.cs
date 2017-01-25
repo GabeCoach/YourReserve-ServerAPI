@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Description: This controller handles all CRUD Operations for Restaurants table.
+ * Methods: 
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -82,6 +87,7 @@ namespace YourReserve.Controllers
                 return BadRequest(ModelState);
             }
 
+            //Query opening, closing times, and day
             var query = from t in db.RestaurantTimeConfigs
                         where t.RestaurantID == restaurantTimeConfig.RestaurantID
                         select new { Day = t.Day, OpeningTime = t.OpeningTime, ClosingTime = t.ClosingTime };
@@ -90,6 +96,7 @@ namespace YourReserve.Controllers
 
             try
             {
+                //Determine if the query has data.
                 if (!query.Any())
                 {
                     db.RestaurantTimeConfigs.Add(restaurantTimeConfig);

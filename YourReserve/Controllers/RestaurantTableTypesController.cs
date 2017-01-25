@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Description: This controller handles all CRUD Operations for Restaurant Table Types.
+ * Methods: GetRestaurantTableTypes, PostRestaurantTableTypes
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;

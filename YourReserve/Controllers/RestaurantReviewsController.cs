@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Description: This controller handles all CRUD Operations for RestaurantReviews table.
+ * Methods: GetRestaurantContacts, PostRestaurantContacts
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -130,6 +135,9 @@ namespace YourReserve.Controllers
             return db.RestaurantReviews.Count(e => e.RestaurantReviewID == id) > 0;
         }
 
+        /* Description: This method gets the restaurant reviews by the restaurant ID.
+         * Methods: GetRestaurantContacts, PostRestaurantContacts
+         */
         [HttpGet]
         [Route("api/RestaurantReviews/getReviewByRestaurant/{ID}")]
         public IOrderedQueryable<RestaurantReview> getReviewByRestaurant(int ID)
@@ -142,10 +150,16 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable<RestaurantReview>)query;
         }
 
+        /* Description: This method gets the top rated restaurants.
+         * Returns: 
+         */
         [HttpGet]
         [Route("api/RestaurantReviews/getTopRestaurants")]
         public IOrderedQueryable getTopRestaurants()
         {
+            /* Description: Join Locations and Reviews, group by restaurant name,
+             * return a query of the restaurants name and the average rating for the restaurant
+             */
             var query = (from Rest in db.Restaurants
                          join Loc in db.RestaurantLocations on Rest.RestaurantID equals Loc.RestaurantID
                          join Rev in db.RestaurantReviews on Rest.RestaurantID equals Rev.RestaurantID

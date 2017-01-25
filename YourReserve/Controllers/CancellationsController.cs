@@ -1,4 +1,10 @@
-﻿using System;
+﻿/* Description: Controller that handles CRUD operations for the Cancellations Table.
+ * Methods: GetCancellations, PostCancellations
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;

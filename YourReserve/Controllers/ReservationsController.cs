@@ -1,4 +1,10 @@
-﻿using System;
+﻿/* Description: This controller handles all Reservation functionalities for Customer and Restaurant dashboard.
+ * Methods: getAvailableCustomers, getTotalReservationsPerWeek
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -75,6 +81,10 @@ namespace YourReserve.Controllers
             return StatusCode(HttpStatusCode.NoContent);
         }
 
+        /* Description: This method calculated the duration of particular customers dining time
+         * Params: ID, Reservation object
+         * Returns: The Timed duration of a diner.
+         */
         [HttpPut]
         [Route("api/Reservations/calculateDuration/{ID}")]
         public TimeSpan calculateDuration(int ID, Reservation reservation)
@@ -84,12 +94,14 @@ namespace YourReserve.Controllers
                 throw new Exception();
             }
 
+            //Calculate Duration
             var startTime = reservation.StartTime.ToString();
             var endTime = reservation.EndTime.ToString();
             TimeSpan duration = DateTime.Parse(endTime).Subtract(DateTime.Parse(startTime));
 
             reservation.Duration = duration;
 
+            //Add changes to database
             db.Entry(reservation).State = System.Data.Entity.EntityState.Modified;
 
             try
@@ -114,10 +126,6 @@ namespace YourReserve.Controllers
             {
                 return BadRequest(ModelState);
             }
-
-            //int TableAssignment = assignTable(Convert.ToInt32(reservation.PartyNumber));
-
-            //reservation.RestaurantTableConfigID = TableAssignment;
 
             db.Reservations.Add(reservation);
             db.SaveChanges();
@@ -158,6 +166,10 @@ namespace YourReserve.Controllers
             return db.Reservations.Count(e => e.ReservationID == id) > 0;
         }
 
+        /* Description: This method queries for completed reservations
+         * Params: ID
+         * Returns: query of completed reservations.
+         */
         [HttpGet]
         [Route("api/Reservations/getCompletedReservations/{ID}")]
         public IOrderedQueryable getCompletedReservations(int ID)
@@ -169,6 +181,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)query;
         }
 
+        /* Description: queries reservations by current date
+         * Params: ID
+         * Returns: query of reservations by today's date.
+         */
         [HttpGet]
         [Route("api/Reservations/getReservationsByCurrentDate/{ID}")]
         public IOrderedQueryable getReservationsByCurrentDate(int ID)
@@ -182,7 +198,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)reservations;
         }
 
-
+        /* Description: this method queries reservations by restaurant id
+         * Params: ID
+         * Returns: query of reservations by restaurant ID.
+         */
         [HttpGet]
         [Route("api/Reservations/getReservationsByID/{ID}")]
         public IOrderedQueryable getReservationsByID(int ID)
@@ -194,7 +213,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)query;
         }
 
-
+        /* Description: This method queries for reservations by reservation ID
+         * Params: ID
+         * Returns: query of reservations matching ID paramater.
+         */
         [HttpGet]
         [Route("api/Reservations/getByID/{ID}")]
         public IOrderedQueryable getByID(int ID)
@@ -206,7 +228,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)query;
         }
 
-
+        /* Description: This method queries for reservations reserved for todays date
+         * Params: ID
+         * Returns: query of reservations from today's date.
+         */
         [HttpGet]
         [Route("api/Reservations/getTotalDayReservations/{ID}")]
         public int getTotalDayReservations(int ID)
@@ -220,7 +245,10 @@ namespace YourReserve.Controllers
             return (int)query;
         }
 
-
+        /* Description: This method queries total amound of reservations for the week
+         * Params: ID
+         * Returns: query of reservations for the week.
+         */
         [HttpGet]
         [Route("api/Reservations/getTotalWeekReservations/{ID}")]
         public int getTotalWeekReservations(int ID)
@@ -235,7 +263,10 @@ namespace YourReserve.Controllers
             return (int)query;
         }
 
-
+        /* Description: This method queries total reservations for the month
+         * Params: ID
+         * Returns: query of total month resevations.
+         */
         [HttpGet]
         [Route("api/Reservations/getTotalMonthReservations/{ID}")]
         public int getTotalMonthReservations(int ID)
@@ -248,6 +279,7 @@ namespace YourReserve.Controllers
 
             int iMonthStart = Convert.ToInt32(DateTime.Now.Month.ToString());
 
+            //if Start month is 12 end date is 12,
             if(iMonthStart == 12)
             {
                 iMonthEnd = 12;
@@ -259,13 +291,14 @@ namespace YourReserve.Controllers
 
             int iYearStart = Convert.ToInt32(DateTime.Now.Year.ToString());
             int iYearEnd = Convert.ToInt32(DateTime.Now.Year.ToString());
-
+          
             if (iMonthStart > 12)
             {
                 iMonthEnd = 1;
                 iYearEnd = iYearEnd + 1;
             }
 
+            //Create Date string
             if(iMonthStart == 12)
             {
                 sEndDate = iMonthEnd.ToString() + "/31/" + iYearEnd.ToString();
@@ -287,8 +320,11 @@ namespace YourReserve.Controllers
             return (int)query;
         }
 
-        
 
+        /* Description: This method queries for average reservations per day
+         * Params: ID
+         * Returns: query of average reservations per day.
+         */
         [HttpGet]
         [Route("api/Reservations/getAverageReservationsPerDay/{ID}")]
         public int getAverageReservationsPerDay(int ID)
@@ -317,7 +353,10 @@ namespace YourReserve.Controllers
             return avgReservationsPerDay;
         }
 
-
+        /* Description: This method queries for average reservations per week
+         * Params: ID
+         * Returns: query of average reservations per week.
+         */
         [HttpGet]
         [Route("api/Reservations/getAverageReservationsPerWeek/{ID}")]
         public int getAverageReservationsPerWeek(int ID)
@@ -349,7 +388,10 @@ namespace YourReserve.Controllers
             return avgReservationsPerWeek;
         }
 
-
+        /* Description: This method queries for average reservations per month
+         * Params: ID
+         * Returns: query of average reservations per month.
+         */
         [HttpGet]
         [Route("api/Reservations/getAverageReservationPerMonth/{ID}")]
         public int getAverageReservationPerMonth(int ID)
@@ -384,6 +426,10 @@ namespace YourReserve.Controllers
             return numOfMonths;
         }
 
+        /* Description: This method queries for total reservations for each month
+         * Params: ID
+         * Returns: query of total reservations each month.
+         */
         [HttpGet]
         [Route("api/Reservations/getTotalReservationsEachMonth/{ID}")]
         public IOrderedQueryable getTotalReservationsEachMonth(int ID)
@@ -397,7 +443,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)monthReservationCount;
         }
 
-
+        /* Description: This method gets top five times that a most booked.
+         * Params: ID
+         * Returns: query of five most booked times
+         */
         [HttpGet]
         [Route("api/Reservations/getPeekTimes/{ID}")]
         public IOrderedQueryable getPeekTimes(int ID)
@@ -411,7 +460,7 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)query;
         }
 
-
+        
         [HttpGet]
         [Route("api/Reservations/getPartyNames/{ID}")]
         public IOrderedQueryable<Reservation> getPartyNames(int ID)
@@ -424,7 +473,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable<Reservation>)query;
         }
 
-
+        /* Description: This method queries for partied with the most reservations
+         * Params: ID
+         * Returns: query of parties with most reservations.
+         */
         [HttpGet]
         [Route("api/Reservations/getTopReservationPartyName/{ID}")]
         public IOrderedQueryable getTopReservationPartyName(int ID)
@@ -437,6 +489,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)query;
         }
 
+        /* Description: gets available times for a particulat date
+         * Params: ID
+         * Returns: List of available times.
+         */
         [HttpPost]
         [Route("api/Reservations/getAvailableTimes")]
         public List<TimeSpan> getAvailableTimes()
@@ -444,16 +500,17 @@ namespace YourReserve.Controllers
 
             try
             {
+                //Retrieve data from Request body and deserialize to an object
                 Task<string> data = Request.Content.ReadAsStringAsync();
-
                 var sData = data.Result;
-
                 DataModel oData = JsonConvert.DeserializeObject<DataModel>(sData);
 
+                //Get the day of the week
                 int RestaurantID = Convert.ToInt32(oData.RestaurantID);
                 DateTime dateSelected = Convert.ToDateTime(oData.Date);
                 var day = dateSelected.DayOfWeek.ToString();
 
+                //query the times open for a particular day
                 var timesOpen = from t in db.RestaurantTimeConfigs
                                 where t.RestaurantID == RestaurantID && t.Day == day
                                 select t;
@@ -467,6 +524,7 @@ namespace YourReserve.Controllers
 
                 TimeSpan incrementTime = TimeSpan.Zero;
 
+                //Add a time to the list object and increment it by 30 minutes
                 foreach (var time in timesOpen)
                 {
                     incrementTime = (TimeSpan)time.OpeningTime;
@@ -498,46 +556,10 @@ namespace YourReserve.Controllers
            
         }
 
-        //[Authorize]
-        //[HttpPost]
-        //[Route("api/Reservations/PrintReport")]
-        //public void PrintReport()
-        //{
-        //    Task<string> data = Request.Content.ReadAsStringAsync();
-
-        //    var sData = data.Result;
-
-        //    DataModel oData = JsonConvert.DeserializeObject<DataModel>(sData);
-
-        //    List<string> Items = new List<string>();
-
-        //    Items.Add(oData.ToString());
-
-        //    ReservationReport oReport = new ReservationReport();
-
-        //    oReport.printPDF(oData.FirstName, oData.LastName, oData.Date, oData.Time, oData.PartyAmount, oData.Email);
-        //}
-
-        private int assignTable(int PartyAmount)
-        {
-            int ConfigNumber = 0;
-
-            var reservation = from r in db.Reservations
-                              select r;
-
-            foreach (var res in reservation)
-            {
-                var TableQuery = from b in db.RestaurantTableConfigs
-                                 where b.NumberOfSeats >= PartyAmount && b.TableConfigID != res.RestaurantTableConfigID
-                                 orderby b.NumberOfSeats ascending
-                                 select b.TableConfigID;
-
-                ConfigNumber = TableQuery.FirstOrDefault();
-            }
-            return ConfigNumber;
-        }
-
-
+        /* Description: This method retrieves the table assignments for a particular restaurant
+         * Params: ID
+         * Returns: table assignments for a restaurant.
+         */
         [HttpPost]
         [Route("api/Reservations/getTableAssignments/{ID}")]
         public IOrderedQueryable getTableAssignments(int ID)
@@ -557,7 +579,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)getAssignments;
         }
 
-
+        /* Description: This method queries for a particular customers reservations
+         * Params: ID
+         * Returns: query of particular customer reservations
+         */
         [HttpGet]
         [Route("api/Reservations/getCustomerReservations/{UserID}")]
         public IOrderedQueryable getCustomerReservations(int UserID)
@@ -570,6 +595,10 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable)query;
         }
 
+        /* Description: This method queries for upcoming reservations
+         * Params: ID
+         * Returns: query of reservations whose dates and times have not come up.
+         */
         [HttpGet]
         [Route("api/Reservations/getUpComingReservations/{RestID}")]
         public IOrderedQueryable getUpComingReservations(int RestID)

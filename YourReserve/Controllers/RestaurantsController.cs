@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Description: This controller handles all CRUD Operations for Restaurants table.
+ * Methods: SearchRestaurant, registerRestaurant
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -133,6 +138,9 @@ namespace YourReserve.Controllers
             return db.Restaurants.Count(e => e.RestaurantID == id) > 0;
         }
 
+        /* Description: This method Searches for restaurants based on the string paramater
+         * Params: string SearchCriteria
+         */
         [HttpGet]
         [Route("api/Restaurants/SearchRestaurant/{SearchCriteria}")]
         public IQueryable<Restaurant> SearchRestaurant(string SearchCriteria)
@@ -141,10 +149,13 @@ namespace YourReserve.Controllers
                         where s.RestaurantName.Contains(SearchCriteria)
                         select s;
 
-
             return query;
         }
 
+        /* Description: registers restaurant in the database.
+         * Params: dynamic Item
+         * Returns: HttpStatusCode
+         */
         [HttpPost]
         [Route("api/Restaurants/registerRestaurant")]
         public IHttpActionResult registerRestaurant(dynamic item)
@@ -154,6 +165,7 @@ namespace YourReserve.Controllers
                 List<string> UserNames = new List<string>();
                 var SMTP = new YourReserveSMTP();
 
+                //Add Restaurant Name info into database
                 var oRestaurant = new Restaurant();
                 oRestaurant.RestaurantName = item[3].RestaurantName;
                 string inputUserName = item[2].UserName;
@@ -163,18 +175,19 @@ namespace YourReserve.Controllers
 
                 int iRestaurantID = oRestaurant.RestaurantID;
 
-
                 var oRestaurantOwner = new RestaurantOwner();
 
                 var queryUserNames = from u in db.RestaurantOwners
                                      where u.UserName.Contains(inputUserName)
                                      select u;
 
+                //Check if entered username exists
                 if(queryUserNames.Any())
                 {
                     throw new Exception("This UserName already exists");
                 }
 
+                //Add Restaurant Owner information to the database
                 oRestaurantOwner.RestaurantID = iRestaurantID;
                 oRestaurantOwner.FirstName = item[2].FirstName;
                 oRestaurantOwner.LastName = item[2].LastName;
@@ -194,6 +207,7 @@ namespace YourReserve.Controllers
 
                 int iRestaurantOwnerID = oRestaurantOwner.RestaurantOwnerID;
 
+                //Add Restaurant Location to database
                 var oRestaurantLocation = new RestaurantLocation();
                 oRestaurantLocation.RestaurantID = iRestaurantID;
                 oRestaurantLocation.Address = item[0].Address;
@@ -208,6 +222,7 @@ namespace YourReserve.Controllers
                 db.RestaurantLocations.Add(oRestaurantLocation);
                 db.SaveChanges();
 
+                //Add RestaurantContact to database
                 var oRestaurantContact = new RestaurantContact();
                 oRestaurantContact.RestaurantID = iRestaurantID;
                 oRestaurantContact.RestaurantOwnerID = iRestaurantOwnerID;
@@ -218,6 +233,7 @@ namespace YourReserve.Controllers
                 db.RestaurantContacts.Add(oRestaurantContact);
                 db.SaveChanges();
 
+                //Send a confirmation email to the registered restaurant.
                 SMTP.sendRestConfirmationEmail(oRestaurantOwner);
 
                 return StatusCode(HttpStatusCode.OK);
@@ -231,13 +247,18 @@ namespace YourReserve.Controllers
 
         }
 
+        /* Description: This method gets Lat and Long from the Google Maps API.
+         * Params: JSON string that contains an address
+         * Returns: Returns a JSON string with the Lat and Long 
+         */
         [HttpGet]
         [Route("api/Restaurants/LatLng/{JSON}")]
         public JObject getLatLng(string JSON)
         {
-            //string sReturn = "";
+
             JObject jReturn = null;
 
+            //Split JSON array into different variables
             string[] arrayJSON = JSON.Split('~');
             string partialaddress1 = arrayJSON[0];
             string partialaddress2 = arrayJSON[1];
@@ -245,11 +266,13 @@ namespace YourReserve.Controllers
             string City = arrayJSON[3].Replace(" ", "+");
             string State = arrayJSON[4];
 
+            //Grab the Lat and Long from the GoogleAPI
             string sReturn = GrabPage("https://maps.googleapis.com/maps/api/geocode/xml?address=" + partialaddress1 + "+" + partialaddress2 + "+" + partialaddress3 + ",+" + City + ",+" + State + "&key=AIzaSyCwgOFfOV8dvATrRpQz3XlAwg8VH7JNNWo", "GET", "", "");
 
             System.Xml.XmlDocument oXMLDoc = new System.Xml.XmlDocument();
             oXMLDoc.LoadXml(sReturn);
 
+            //Get Lat and Long nodes from the xml 
             System.Xml.XmlNode oNodeLat = oXMLDoc.SelectSingleNode("//geometry/location/lat");
             System.Xml.XmlNode oNodeLng = oXMLDoc.SelectSingleNode("//geometry/location/lng");
 
@@ -267,6 +290,10 @@ namespace YourReserve.Controllers
             return jReturn;
         }
 
+        /* Description: This method gets RestaurantID by Restaurant name.
+         * Params: string Name
+         * Returns: a query that gives a restaurant ID
+         */
         [HttpGet]
         [Route("api/getRestaurantIDByName")]
         public IOrderedQueryable<Restaurant> getRestaurantIDByName(string Name)
@@ -278,10 +305,15 @@ namespace YourReserve.Controllers
             return (IOrderedQueryable<Restaurant>)query;
         }
 
+        /* Description: This controller handles all CRUD Operations for RestaurantContacts table.
+         * Params: string url, string sMethod, string, strRequest, string sToken
+         * Returns: returns a string that contains Lat Long.
+         */
         private static string GrabPage(string url, string sMethod, string strRequest, string sToken)
         {
             try
             {
+                //Create HttpRequest
                 System.Net.HttpWebRequest req = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(url);
                 req.Method = sMethod;
                 if (sMethod != "GET")
@@ -289,6 +321,7 @@ namespace YourReserve.Controllers
                     req.ContentType = "application/json";
                 }
 
+                //Add Bearer Token
                 if (!string.IsNullOrEmpty(sToken))
                 {
                     req.Headers.Add("Authorization", "Bearer " + sToken);
@@ -300,6 +333,7 @@ namespace YourReserve.Controllers
                     streamOut.Close();
                 }
 
+                //Return Response
                 System.IO.StreamReader streamIn = new System.IO.StreamReader(req.GetResponse().GetResponseStream());
                 string strResponse = streamIn.ReadToEnd();
                 streamIn.Close();

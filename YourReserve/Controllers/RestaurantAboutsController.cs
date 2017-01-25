@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Description: This controller handles all Reservation About CRUD operations.
+ * Methods: getAvailableCustomers, getTotalReservationsPerWeek
+ * Author: Gabriel Coach 
+ * Email: gsctca@gmail.com
+*/
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
